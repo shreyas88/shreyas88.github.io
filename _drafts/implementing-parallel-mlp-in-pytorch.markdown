@@ -44,7 +44,9 @@ we still need to add the reduce the matrix across nodes
 to get the final result. 
 ```
 
-The following implementation is simplified as adapted from the Megatron code base simplified for educational purpose. We would be using a single serve dual GPU setup to simplify the setup.
+The following implementation is simplified as adapted from the Megatron code base simplified for educational purpose. 
+1. We would be using a single serve dual GPU setup to simplify the setup.
+2. We do NOT handle any weight initialization which would typically be required in real applications.
  
 ## Setup distributed torch application
 Initialize the simplified torch distributed setup to enable collective communications. This is covered in more detailed in the [official pytorch guide](https://pytorch.org/tutorials/intermediate/dist_tuto.html)
@@ -150,10 +152,7 @@ if __name__=='__main__':
 import torch
 import torch.nn as nn
 
-
 class LinearColumnWithAsyncGrad(torch.autograd.Function):
-    """See linear_with_grad_accumulation_and_async_allreduce"""
-
     @staticmethod
     @custom_fwd
     def forward(ctx,input,weight,bias):
