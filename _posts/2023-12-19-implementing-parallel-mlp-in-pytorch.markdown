@@ -199,8 +199,6 @@ class ColumnParallelLinear(torch.nn.Module):
 
     def forward(self, input_: torch.Tensor):
         return LinearColumnWithGradReduce.apply(input_, self.weight, self.bias)
-
-
 ```
 
 ## Relu layer
