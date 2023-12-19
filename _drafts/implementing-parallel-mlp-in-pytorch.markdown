@@ -21,6 +21,23 @@ We represent the input tensor using `(B, T, D)` where
 2. `Non linearity`: Gelu/relu layer applied at the hidden dimension level 
 3. `Matrix multiplication project down`: Project back down from hidden dimension `4D` to `D` ie `B,T,4D -> B,T,D`
 
+
+The idea is as follows:
+Split the GEMM as follows
+
+```matlab
+[Y1 Y2] = X [ A1, A2 ]
+
+Z1,Z2 = gelu(Y1, Y2)
+
+[Z1 Z2 ] [ B1
+           B2 ]
+```
+Followed by all-reduce operation
+
+
+The following implementation is simplified as adapted from the Megatron code base simplified for educational purpose. 
+
 ```python
 import os
 import torch
