@@ -46,6 +46,8 @@ we still need to add the reduce the matrix across nodes
 to get the final result. 
 ```
 
+![Screenshot 2023-12-18 at 7.14.09 PM-0018be.png](/uploads/Screenshot%202023-12-18%20at%207.14.09%20PM-0018be.png=250x250)
+
 The following implementation is simplified as adapted from the Megatron code base simplified for educational purpose. 
 1. We would be using a single serve dual GPU setup to simplify the setup.
 2. We do NOT handle any weight initialization which would typically be required in real applications.
