@@ -1,5 +1,5 @@
 ---
-title: Shreyas Srivastava
+title: Bits and Bytes
 timezone: UTC
 collections:
   posts:
@@ -8,8 +8,9 @@ collections:
   uploads:
     title: Uploads
     output: true
-description: Bits and Bytes
+description: Shreyas Srivastava
 show_downloads: true
+author: Shreyas Srivastava
 url: https://shreyas88.github.io/
 google_analytics: 
 theme: jekyll-theme-hacker
