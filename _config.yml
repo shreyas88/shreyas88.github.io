@@ -10,5 +10,6 @@ collections:
     output: true
 description: Hacker is a theme for GitHub Pages.
 show_downloads: true
+url: https://shreyas88.github.io/
 google_analytics: 
 theme: jekyll-theme-hacker
