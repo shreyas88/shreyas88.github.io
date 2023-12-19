@@ -47,8 +47,9 @@ we still need to add the reduce the matrix across nodes
 to get the final result
 ```
 Followed by all-reduce operation
+BTD * D *(4D)x -> BT(4D)
 
-![Screenshot 2023-12-18 at 7.14.09 PM.png](/uploads/Screenshot%202023-12-18%20at%207.14.09%20PM.png)
+
 
 The following implementation is simplified as adapted from the Megatron code base simplified for educational purpose. 
 
