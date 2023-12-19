@@ -43,3 +43,5 @@ def dist_init(rank, num_procs, run_func, *func_args, **func_kwargs):
     # tear down after test completes
     torch.distributed.destroy_process_group()
 ```
+
+adsad
