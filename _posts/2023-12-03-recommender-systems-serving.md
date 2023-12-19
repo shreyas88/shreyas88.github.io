@@ -5,8 +5,8 @@ layout: post
 ---
 
 Modern recommendation deep learning models have below main components 
-- Embedding ID tables
-- MLP and other interaction/dense layers.
+* Embedding ID tables
+* MLP and other interaction/dense layers.
 
 When reporting the model parameters usually the number of parameters are combined together however since they have different performance characteristics, it is important to consider the parameter increase separately. Memory and parameter increase in MLP/dense layers would impact performance differently than a corresponding increase in embedding table size
 
