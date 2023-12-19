@@ -42,5 +42,4 @@ def dist_init(rank, num_procs, run_func, *func_args, **func_kwargs):
     torch.distributed.barrier()
     # tear down after test completes
     torch.distributed.destroy_process_group()
-
 ```
