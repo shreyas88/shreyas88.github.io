@@ -10,8 +10,15 @@ Typically we see the following kinds of parallelism (more details in [Megatron L
 2. **Pipeline parallelism**: Splits the sequential layers of the transformer model across different GPU nodes. This is analogous to the pipelining concept in computer architecture.  
 3. **Data parallelism**: Split the work across the batch axis and reduce the gradients using all-reduce operation. 
 
-One of the primitives is parallel tensorized MLP block in transformer architecture. We typically have a self attention block followed by MLP blocker interspersed with the dropout/layer norm layers. Here we focus on implementing the tensor parallel MLP layer. This has the following operations
-1. Matrix multiplication : 
+One of the primitives is parallel tensorized MLP block in transformer architecture. We typically have a self attention block followed by MLP blocker interspersed with the dropout/layer norm layers. Here we focus on implementing the tensor parallel MLP layer. This has the following operations. 
+
+We represent the input tensor using `(B, T, D)` where
+`B: Batch size`
+`T: Sequence dimension`
+`D: Hidden dimension`
+
+1. **Matrix multiplication** : Project from hidden dimension `D` to `4D` ie `B,T,D -> B,T,4D`
+2. ** Non linearity** : Gelu/relu layer applied at the hidden dimension level 
 
 ```python
 import os
