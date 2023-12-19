@@ -49,8 +49,8 @@ The following implementation is simplified as adapted from the Megatron code bas
 ### Setup distributed torch application
 Initialize the simplified torch distributed setup to enable collective communications. This is covered in more detailed in the [official pytorch guide](https://pytorch.org/tutorials/intermediate/dist_tuto.html)
 
-1. `dist_launcher` spawns multiple processes and handles the 
-
+1. `dist_launcher` spawns multiple processes and handles the synchronization loop
+2. `dist_init` sets up the distributed process group which is used for collective communication ops such as all-reduce, all-to-all etc.
 
 ```python
 import os
