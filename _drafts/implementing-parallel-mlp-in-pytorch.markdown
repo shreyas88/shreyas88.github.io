@@ -13,7 +13,7 @@ Splits the sequential layers of the transformer model across different GPU nodes
 ### Data parallelism
 Split the work across the batch axis and reduce the gradients using all-reduce operation. 
 
-### Overview
+## Overview
 One of the primitives is parallel tensorized MLP block in transformer architecture. We typically have a self attention block followed by MLP blocker interspersed with the dropout/layer norm layers. Here we focus on implementing the tensor parallel MLP layer. This has the following operations. 
 
 We represent the input tensor using `(B, T, D)` where
@@ -46,7 +46,7 @@ to get the final result.
 
 The following implementation is simplified as adapted from the Megatron code base simplified for educational purpose. We would be using a single serve dual GPU setup to simplify the setup.
  
-### Setup distributed torch application
+## Setup distributed torch application
 Initialize the simplified torch distributed setup to enable collective communications. This is covered in more detailed in the [official pytorch guide](https://pytorch.org/tutorials/intermediate/dist_tuto.html)
 
 1. `dist_launcher` spawns multiple processes and handles the synchronization loop
@@ -143,7 +143,7 @@ if __name__=='__main__':
     dist_launcher(2,dummy)
 ```
 
-### Column parallel 
+## Column parallel layer
 
 
 ```python
