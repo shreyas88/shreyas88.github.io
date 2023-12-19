@@ -46,7 +46,7 @@ we still need to add the reduce the matrix across nodes
 to get the final result. 
 ```
 
-<img src="/uploads/Screenshot%202023-12-18%20at%207.14.09%20PM-0018be.png" width="500" height="400">
+<img src="/uploads/Screenshot%202023-12-18%20at%207.14.09%20PM-0018be.png" width="700" height="400">
 
 The following implementation is simplified as adapted from the Megatron code base simplified for educational purpose. 
 1. We would be using a single serve dual GPU setup to simplify the setup.
