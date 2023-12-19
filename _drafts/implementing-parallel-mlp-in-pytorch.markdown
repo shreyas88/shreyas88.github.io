@@ -44,10 +44,13 @@ we still need to add the reduce the matrix across nodes
 to get the final result. 
 ```
 
-The following implementation is simplified as adapted from the Megatron code base simplified for educational purpose.
+The following implementation is simplified as adapted from the Megatron code base simplified for educational purpose. We would be using a single serve dual GPU setup to simplify the setup.
  
 ### Setup distributed harness
-Initialize the torch distributed setup to enable collective communications. This set 
+Initialize the simplified torch distributed setup to enable collective communications. 
+1. `dist_launcher` spawns multiple processes and handles the 
+
+
 ```python
 import os
 import torch
@@ -122,7 +125,18 @@ def dist_launcher(num_procs, run_func, *func_args, **func_kwargs):
             print(f"Worker {rank} killed by signal {-p.exitcode}")
         if p.exitcode > 0:
             print(f"Worker {rank} exited with code {p.exitcode}")
+```
 
+```python
+def dummy():
+    rank = dist.get_rank()
+    world_size = dist.get_world_size()
+    print("Rank output:",out_per_rank.cpu().shape)
+    print("Output:",out.cpu().shape)
+
+if __name__=='__main__':
+    torch.multiprocessing.set_start_method('spawn')
+    dist_launcher(2,dummy)
 ```
 
 adsad
