@@ -46,8 +46,9 @@ to get the final result.
 
 The following implementation is simplified as adapted from the Megatron code base simplified for educational purpose. We would be using a single serve dual GPU setup to simplify the setup.
  
-### Setup distributed harness
-Initialize the simplified torch distributed setup to enable collective communications. 
+### Setup distributed torch application
+Initialize the simplified torch distributed setup to enable collective communications. This is covered in more detailed in the [official pytorch guide](https://pytorch.org/tutorials/intermediate/dist_tuto.html)
+
 1. `dist_launcher` spawns multiple processes and handles the 
 
 
