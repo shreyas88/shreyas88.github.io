@@ -3,7 +3,7 @@ title: Implementing Parallel MLP in pytorch
 date: 2023-12-19 02:54:00 Z
 ---
 
-{% highlight python %}
+```python
 import os
 import torch
 import time
@@ -45,4 +45,4 @@ def dist_init(rank, num_procs, run_func, *func_args, **func_kwargs):
     # tear down after test completes
     torch.distributed.destroy_process_group()
 
-{% endhighlight %}
+```python
