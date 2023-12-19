@@ -35,6 +35,7 @@ Z1,Z2 = gelu(Y1, Y2)
 ```
 Followed by all-reduce operation
 
+![Screenshot 2023-12-18 at 7.14.09 PM.png](/uploads/Screenshot%202023-12-18%20at%207.14.09%20PM.png)
 
 The following implementation is simplified as adapted from the Megatron code base simplified for educational purpose. 
 
