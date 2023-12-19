@@ -79,4 +79,4 @@ def dist_launcher(num_procs, run_func, \*func_args, \*\*func_kwargs):\
             print(f"Worker {rank} killed by signal {-p.exitcode}")\
         if p.exitcode > 0:\
             print(f"Worker {rank} exited with code {p.exitcode}")\
-{% highlight python %}
+{% endhighlight %}
