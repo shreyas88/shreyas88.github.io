@@ -5,11 +5,10 @@ date: 2023-12-19 02:54:00 Z
 
 Tensor parallel MLP is one of the building blocks of modern distributed transformer based models. 
 
-Typically we see the following kinds of 
-1. Tensor parallelism:
-2. Pipeline parallelism:
-3. Data parallelism: 
-
+Typically we see the following kinds of parallelism:
+1. *Tensor parallelism*: Splits the tensor computation across various GPU nodes. Typically this is used within a server datacenter node since this involves all reduce operations(over nvLink network as opposed to slower interconnects) which are expensive collective communication operations.
+2. *Pipeline parallelism*: Splits the sequential layers of the transformer model across different GPU nodes. This is analogous to the pipelining concept in computer architecture.  
+3. *Data parallelism*: Split the work across the batch axis and reduce the gradients using all-reduce operation. 
 
 ```python
 import os
