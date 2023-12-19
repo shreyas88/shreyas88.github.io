@@ -5,7 +5,7 @@ date: 2023-12-19 02:54:00 Z
 
 Tensor parallel MLP is one of the building blocks of modern distributed transformer based models. 
 
-Typically we see the following kinds of parallelism (more details in [Megatron LM](https://www.google.com/search?q=Megatron-LM&oq=Megatron-LM&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIMCAEQABgUGIcCGIAEMgwIAhAAGEMYgAQYigUyBwgDEAAYgAQyBwgEEAAYgAQyBggFEEUYPDIGCAYQRRg8MgYIBxBFGDzSAQczMTFqMGo0qAIAsAIA&sourceid=chrome&ie=UTF-8#:~:text=Megatron%2DLM%3A%20Training,org%20%E2%80%BA%20cs))
+Typically we see the following kinds of parallelism 
 ### Tensor parallelism 
 Splits the tensor computation across various GPU nodes. Typically this is used within a server datacenter node since this involves all reduce operations(over nvLink network as opposed to slower interconnects) which are expensive collective communication operations.
 ### Pipeline parallelism
@@ -149,7 +149,10 @@ if __name__=='__main__':
 
 ## Column parallel layer 
 `[Y1 Y2] = X [ A1, A2 ]`
-The forward pass is straightforward as we simply need to need to output the matrix multiplication result corresponding to split column weight matrix. However, in the backward pass gradient all-reduce op is needed to sum the gradient contributions from the branches going back from X * A1 and X * A2.
+The forward pass is straightforward as we simply need to need to output the matrix multiplication result corresponding to split column weight matrix. 
+
+However, in the backward pass gradient all-reduce op is needed to sum the gradient contributions from the branches going back from `X * A1` and `X * A2`. In order to override the backward pass behavior, we will need to implement the `torch.autograd.Function` function and override the backward pass.
+
 
 ```python
 import torch
@@ -189,17 +192,14 @@ class ColumnParallelLinear(torch.nn.Module):
     The linear layer is defined as Y = XA + b. A is parallelized along
     its second dimension as A = [A_1, ..., A_p].
     """
-    def __init__(self, rank, world_size, weight_per_rank, bias_per_rank):
+    def __init__(self, weight_per_rank, bias_per_rank):
         super(ColumnParallelLinear, self).__init__()
-        self.world_size = world_size
-        self.rank = rank
-        self.output_size_per_partition = 100
-        self.input_size = 40
         self.weight = nn.Parameter(weight_per_rank)
         self.bias = nn.Parameter(bias_per_rank)
 
     def forward(self, input_: torch.Tensor):
-        return LinearColumnWithAsyncGrad.apply(*[input,weight,bias])
+        return LinearColumnWithGradReduce.apply(input_, self.weight, self.bias)
+
 
 ```
 
@@ -209,4 +209,45 @@ Relu layer should continue to work as expected normally
 ## Row parallel layer
 In the Row Parallel Layer, the weight matrix is split along the row dimension.  
 
+```python
+class LinearRowWithTensorReduce(torch.autograd.Function):
+    @staticmethod
+    @custom_fwd
+    def forward(ctx,input,weight,bias):
+        ctx.save_for_backward(input, weight)
+        output = torch.matmul(input, weight.t()) + bias
+        # all reduce along tensor parallel dimension
+        return torch.distributed.all_reduce(output)
+        
+
+    @staticmethod
+    @custom_bwd
+    def backward(ctx, grad_output):
+        input, weight = ctx.saved_tensors
+        grad_input = grad_output.matmul(weight)
+        grad_weight = grad_output.t().matmul(input)
+        grad_bias = grad_output.sum(dim=0)
+        return grad_input, grad_weight, grad_bias
+
+class RowParallelLinear(torch.nn.Module):
+    """Linear layer with row parallelism.
+    its second dimension as Z =   X  [ Y1
+                                       Y2 ]
+    """
+class RowParallelLinear(torch.nn.Module):
+    """Linear layer with row parallelism.
+    its second dimension as Z =   X  [ Y1
+                                       Y2 ]
+    """
+    def __init__(self, weight_per_rank, bias_per_rank):
+        super(RowParallelLinear, self).__init__()
+        self.weight = nn.Parameter(weight_per_rank)
+        self.bias = nn.Parameter(bias_per_rank)
+
+    def forward(self, input_: torch.Tensor):
+        LinearRowWithTensorReduce.apply(input_, self.weight, self.bias)
+
+    def forward(self, input_: torch.Tensor):
+        LinearRowWithTensorReduce.apply(input_, self.weight, self.bias)
+```
 
