@@ -17,8 +17,9 @@ We represent the input tensor using `(B, T, D)` where
 `T: Sequence dimension`
 `D: Hidden dimension`
 
-1. **Matrix multiplication** : Project from hidden dimension `D` to `4D` ie `B,T,D -> B,T,4D`
-2. ** Non linearity** : Gelu/relu layer applied at the hidden dimension level 
+1. `Matrix multiplication project up` : Project from hidden dimension `D` to `4D` ie `B,T,D -> B,T,4D`
+2. `Non linearity`: Gelu/relu layer applied at the hidden dimension level 
+3. `Matrix multiplication project down`: Project back down from hidden dimension `4D` to `D` ie `B,T,4D -> B,T,D`
 
 ```python
 import os
