@@ -6,9 +6,10 @@ date: 2023-12-19 02:54:00 Z
 Tensor parallel MLP is one of the building blocks of modern distributed transformer based models. 
 
 Typically we see the following kinds of parallelism (more details in [Megatron LM](https://www.google.com/search?q=Megatron-LM&oq=Megatron-LM&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIMCAEQABgUGIcCGIAEMgwIAhAAGEMYgAQYigUyBwgDEAAYgAQyBwgEEAAYgAQyBggFEEUYPDIGCAYQRRg8MgYIBxBFGDzSAQczMTFqMGo0qAIAsAIA&sourceid=chrome&ie=UTF-8#:~:text=Megatron%2DLM%3A%20Training,org%20%E2%80%BA%20cs))
-1. `Tensor parallelism`: Splits the tensor computation across various GPU nodes. Typically this is used within a server datacenter node since this involves all reduce operations(over nvLink network as opposed to slower interconnects) which are expensive collective communication operations.
-2. `Pipeline parallelism`: Splits the sequential layers of the transformer model across different GPU nodes. This is analogous to the pipelining concept in computer architecture.  
-3. `Data parallelism`: Split the work across the batch axis and reduce the gradients using all-reduce operation. 
+#####Tensor parallelism: 
+Splits the tensor computation across various GPU nodes. Typically this is used within a server datacenter node since this involves all reduce operations(over nvLink network as opposed to slower interconnects) which are expensive collective communication operations.
+#### Pipeline parallelism: Splits the sequential layers of the transformer model across different GPU nodes. This is analogous to the pipelining concept in computer architecture.  
+#### Data parallelism: Split the work across the batch axis and reduce the gradients using all-reduce operation. 
 
 One of the primitives is parallel tensorized MLP block in transformer architecture. We typically have a self attention block followed by MLP blocker interspersed with the dropout/layer norm layers. Here we focus on implementing the tensor parallel MLP layer. This has the following operations. 
 
