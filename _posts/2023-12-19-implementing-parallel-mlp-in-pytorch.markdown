@@ -13,8 +13,6 @@ from pathlib import Path
 import torch.distributed as dist
 from torch.multiprocessing import Process
 import deepspeed
-DEEPSPEED_UNIT_WORKER_TIMEOUT = 120
-
 
 def dist_init(rank, num_procs, run_func, *func_args, **func_kwargs):
     """Initialize torch.distributed and execute the user function."""
@@ -45,4 +43,4 @@ def dist_init(rank, num_procs, run_func, *func_args, **func_kwargs):
     # tear down after test completes
     torch.distributed.destroy_process_group()
 
-```python
+```
