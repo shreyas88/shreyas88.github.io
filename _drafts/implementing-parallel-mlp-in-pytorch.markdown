@@ -29,15 +29,21 @@ The idea is as follows:
 Split the GEMM as follows
 
 ```matlab
-% Split the matrix-up weight vector along the column dimension. Note that splitting the input X along row and A along column doesn't work due to the non-linearity after this layer. 
+% Split the matrix-up weight vector along the column dimension. 
+Note that splitting the input X along row and A along column 
+doesn't work due to the non-linearity after this layer. 
 [Y1 Y2] = X [ A1, A2 ]
 
 % apply the gelu independently across the tensor parallel degree
 Z1,Z2 = gelu(Y1, Y2)
 
-% split the second weight vector along the row this allows 
+% split the second weight vector along the row 
+% eg if orig (m,n)*(n,k) -> (m, n/2) * (n/2, k) = (m,k)
 [Z1 Z2 ] [ B1
            B2 ]
+Note that even though the dimension match in the final step
+we still need to add the reduce the matrix across nodes
+to get the final result
 ```
 Followed by all-reduce operation
 
