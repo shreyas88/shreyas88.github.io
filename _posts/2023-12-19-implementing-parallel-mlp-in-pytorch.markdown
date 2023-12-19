@@ -207,7 +207,9 @@ class ColumnParallelLinear(torch.nn.Module):
 Relu layer should continue to work as expected normally
 
 ## Row parallel layer
-In the Row Parallel Layer, the weight matrix is split along the row dimension.  
+In the Row Parallel Layer, the weight matrix is split along the row dimension.  The implementation is very similar to column parallel with couple of differences:
+1. All reduce is required on the forward pass to accumulate partial results from row level matrix multiplication combined with previous column result
+2. Backward pass doesn't require any all reduce as the gradients don't need to be combined on the backward pass. 
 
 ```python
 class LinearRowWithTensorReduce(torch.autograd.Function):
@@ -234,11 +236,6 @@ class RowParallelLinear(torch.nn.Module):
     its second dimension as Z =   X  [ Y1
                                        Y2 ]
     """
-class RowParallelLinear(torch.nn.Module):
-    """Linear layer with row parallelism.
-    its second dimension as Z =   X  [ Y1
-                                       Y2 ]
-    """
     def __init__(self, weight_per_rank, bias_per_rank):
         super(RowParallelLinear, self).__init__()
         self.weight = nn.Parameter(weight_per_rank)
@@ -247,7 +244,5 @@ class RowParallelLinear(torch.nn.Module):
     def forward(self, input_: torch.Tensor):
         LinearRowWithTensorReduce.apply(input_, self.weight, self.bias)
 
-    def forward(self, input_: torch.Tensor):
-        LinearRowWithTensorReduce.apply(input_, self.weight, self.bias)
 ```
 
