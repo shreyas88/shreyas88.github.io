@@ -128,16 +128,16 @@ def dist_launcher(num_procs, run_func, *func_args, **func_kwargs):
             print(f"Worker {rank} exited with code {p.exitcode}")
 ```
 
+We can set up a dummy test loop like below which should print the output on the two processes. 
+
 ```python
 def dummy():
     rank = dist.get_rank()
     world_size = dist.get_world_size()
-    print("Rank output:",out_per_rank.cpu().shape)
-    print("Output:",out.cpu().shape)
+    print(torch.cuda.get_device())
+    print(rank)
 
 if __name__=='__main__':
     torch.multiprocessing.set_start_method('spawn')
     dist_launcher(2,dummy)
 ```
-
-adsad
