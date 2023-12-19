@@ -14,7 +14,9 @@ Splits the sequential layers of the transformer model across different GPU nodes
 Split the work across the batch axis and reduce the gradients using all-reduce operation. 
 
 ## Overview
-One of the primitives is parallel tensorized MLP block in transformer architecture. We typically have a self attention block followed by MLP blocker interspersed with the dropout/layer norm layers. Here we focus on implementing the tensor parallel MLP layer. This has the following operations. 
+Tensor parallel MLP block is common in high performance transformer architecture. We typically have a self attention block followed by MLP blocker interspersed with the dropout/layer norm layers. Here we focus on implementing the tensor parallel MLP layer. By splitting the matrix, we can reduce the memory bandwidth requirements(memory bound) as we cut down the size of activation and weight matrix and hope to get a linear speedup by increasing the number of GPU's.
+
+This has the following operations. 
 
 We represent the input tensor using `(B, T, D)` where
 `B: Batch size`
@@ -131,7 +133,7 @@ def dist_launcher(num_procs, run_func, *func_args, **func_kwargs):
             print(f"Worker {rank} exited with code {p.exitcode}")
 ```
 
-We can set up a dummy test loop like below which should print the output on the two processes. 
+We can set up a dummy test loop like below which should print the output on the two processes. We will extend this harness later on.
 
 ```python
 def dummy():
@@ -145,8 +147,9 @@ if __name__=='__main__':
     dist_launcher(2,dummy)
 ```
 
-## Column parallel layer
-
+## Column parallel layer 
+`[Y1 Y2] = X [ A1, A2 ]`
+The forward pass is straightforward as we simply need to need to output the matrix multiplication result corresponding to split column weight matrix. However, in the backward pass gradient all-reduce op is needed to sum the gradient contributions from the branches going back from X * A1 and X * A2.
 
 ```python
 import torch
@@ -199,3 +202,9 @@ class ColumnParallelLinear(torch.nn.Module):
         return LinearColumnWithAsyncGrad.apply(*[input,weight,bias])
 
 ```
+
+## Relu layer
+Relu layer should continue to work as expected normally
+
+## Row parallel layer
+In the Row Parallel Layer, the weight matrix is split along the row dimension.  
