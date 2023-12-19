@@ -45,6 +45,7 @@ Note that even though the dimension match in the final step
 we still need to add the reduce the matrix across nodes
 to get the final result. 
 ```
+[Diagram from Megatron paper](https://arxiv.org/abs/1909.08053)
 
 <img src="/uploads/Screenshot%202023-12-18%20at%207.14.09%20PM-0018be.png" width="700" height="400">
 
