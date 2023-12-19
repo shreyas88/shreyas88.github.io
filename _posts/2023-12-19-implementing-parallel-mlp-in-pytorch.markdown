@@ -3,7 +3,7 @@ title: Implementing Parallel MLP in pytorch
 date: 2023-12-19 02:54:00 Z
 ---
 
-\`\`\`python
+{% highlight python %}
 
 import os\
 import torch\
@@ -79,4 +79,4 @@ def dist_launcher(num_procs, run_func, \*func_args, \*\*func_kwargs):\
             print(f"Worker {rank} killed by signal {-p.exitcode}")\
         if p.exitcode > 0:\
             print(f"Worker {rank} exited with code {p.exitcode}")\
-\`\`\`
+{% highlight python %}
