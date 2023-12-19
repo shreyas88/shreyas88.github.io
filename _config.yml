@@ -11,6 +11,7 @@ collections:
 description: Shreyas Srivastava
 show_downloads: true
 author: Shreyas Srivastava
-url: https://shreyassriv.github.io/
+url: shreyassriv.github.io
+google_analytics: 
 theme: jekyll-theme-hacker
 repository: shreyas88/shreyassriv.github.io
