@@ -208,3 +208,5 @@ Relu layer should continue to work as expected normally
 
 ## Row parallel layer
 In the Row Parallel Layer, the weight matrix is split along the row dimension.  
+
+
