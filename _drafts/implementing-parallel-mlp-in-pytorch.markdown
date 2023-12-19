@@ -27,10 +27,13 @@ The idea is as follows:
 Split the GEMM as follows
 
 ```matlab
+% Split the matrix-up weight vector along the column dimension. Note that splitting the input X along row and A along column doesn't work due to the non-linearity after this layer. 
 [Y1 Y2] = X [ A1, A2 ]
 
+% apply the gelu independently across the tensor parallel degree
 Z1,Z2 = gelu(Y1, Y2)
 
+% split the second weight vector along the row this allows 
 [Z1 Z2 ] [ B1
            B2 ]
 ```
