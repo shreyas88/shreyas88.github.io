@@ -3,6 +3,14 @@ title: Implementing Parallel MLP in pytorch
 date: 2023-12-19 02:54:00 Z
 ---
 
+Tensor parallel MLP is one of the building blocks of modern distributed transformer based models. 
+
+Typically we see the following kinds of 
+1. Tensor parallelism:
+2. Pipeline parallelism:
+3. Data parallelism: 
+
+
 ```python
 import os
 import torch
