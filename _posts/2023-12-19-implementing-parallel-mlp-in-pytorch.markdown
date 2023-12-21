@@ -4,18 +4,20 @@ date: 2023-12-19 02:54:00 Z
 ---
 
 Tensor parallel MLP is one of the building blocks of distributed transformer based models. For instance reference check [Parallel mlp layer](https://github.com/EleutherAI/gpt-neox/blob/9283effb37e1b72acef265d17cbe37881441e88c/megatron/model/transformer.py#L71) in GPT neox. 
-The goal of this implementation is to simplify some of the logic to the core elements. 
+The goal of this implementation is to simplify and understand how to implement this logic in distributed pytorch setup.
 
-Typically we see the following kinds of parallelism 
+Typically we see the following kinds of parallelism in large transformer models. 
 ### Tensor parallelism 
 Splits the tensor computation across various GPU nodes. Typically this is used within a server datacenter node since this involves all reduce operations(over nvLink network as opposed to slower interconnects) which are expensive collective communication operations.
 ### Pipeline parallelism
-Splits the sequential layers of the transformer model across different GPU nodes. This is analogous to the pipelining concept in computer architecture.  
+Splits the sequential layers of the transformer model across different GPU nodes. This is analogous to the pipelining concept in computer architecture.  Since implementing it requires cheaper communication cost(point to point instead of collective communication) it is typically implemented as we scale beyond a single host machine. 
 ### Data parallelism
 Split the work across the batch axis and reduce the gradients using all-reduce operation. 
 
 ## Overview
-Tensor parallel MLP block is common in high performance transformer architecture. We typically have a self attention block followed by MLP blocker interspersed with the dropout/layer norm layers. Here we focus on implementing the tensor parallel MLP layer. By splitting the matrix, we can reduce the memory bandwidth requirements(memory bound) as we cut down the size of activation and weight matrix and hope to get a linear speedup by increasing the number of GPU's.
+Tensor parallel MLP block is common in high performance transformer architecture. We typically have a self attention block followed by MLP blocker interspersed with the dropout/layer norm layers. Here we focus on implementing the tensor parallel MLP layer. 
+
+By splitting the matrix, we can reduce the memory bandwidth requirements(memory bound) as we cut down the size of activation and weight matrix and hope to get a linear speedup by increasing the number of GPU's.
 
 This has the following operations. 
 
