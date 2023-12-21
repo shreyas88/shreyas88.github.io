@@ -19,8 +19,6 @@ Tensor parallel MLP block is common in high performance transformer architecture
 
 By splitting the matrix, we can reduce the memory bandwidth requirements(memory bound) as we cut down the size of activation and weight matrix and hope to get a linear speedup by increasing the number of GPU's.
 
-This has the following operations. 
-
 We represent the input tensor using `(B, T, D)` where
 `B: Batch size`
 `T: Sequence dimension`
@@ -32,7 +30,7 @@ We represent the input tensor using `(B, T, D)` where
 
 ```matlab
 % Split the matrix-up weight vector along the column dimension. 
-% Note that splitting the input X along row and A along column 
+% Note that splitting the input X along column and A along row 
 % doesn't work due to the non-linearity after this layer. 
 [Y1 Y2] = X [ A1, A2 ]
 
