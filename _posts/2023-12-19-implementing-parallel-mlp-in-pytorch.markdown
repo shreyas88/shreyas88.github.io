@@ -30,7 +30,6 @@ We represent the input tensor using `(B, T, D)` where
 2. `Non linearity`: Gelu/relu layer applied at the hidden dimension level 
 3. `Matrix multiplication project down`: Project back down from hidden dimension `4D` to `D` ie `B,T,4D -> B,T,D`
 
-Pseudo-code for tensor parallel MLP layer
 ```matlab
 % Split the matrix-up weight vector along the column dimension. 
 % Note that splitting the input X along row and A along column 
