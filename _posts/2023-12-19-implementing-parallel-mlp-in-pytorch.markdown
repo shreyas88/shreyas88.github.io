@@ -271,3 +271,101 @@ class RowParallelLinear(torch.nn.Module):
         return LinearRowWithTensorReduce.apply(input_, self.weight, self.bias, self.rank)
 ```
 
+## Putting it together
+Putting together the column and row parallel MLP as described above and wrapping up in a runnable function across each GPU machine.
+
+We add some logic here to trigger the backward pass and calculate gradients against a dummy loss function. Finally, we shuttle the activations from the final layer and gradients on the input back to the parent process.
+
+```python
+def run_parallel_mlp(rank, queue, weight_layer1, bias_layer1, weight_layer2,bias_layer2, x, dummy_labels):
+    rank = dist.get_rank()
+    device_id = torch.cuda.current_device()
+    
+    # Split and move weights and biases to the current device
+    weight_per_rank_layer1 = split_tensor(weight_layer1, OUTPUT_SIZE_PER_PARTITION, -1, rank)
+    bias_per_rank_layer1 = split_tensor(bias_layer1, OUTPUT_SIZE_PER_PARTITION, -1, rank)
+    weight_per_rank_layer2 = split_tensor(weight_layer2, OUTPUT_SIZE_PER_PARTITION, 0, rank)
+
+    # Create and apply ColumnParallelLinear module
+    myColParallelModule = ColumnParallelLinear(rank, weight_per_rank_layer1, 
+                                               bias_per_rank_layer1).to(device_id)
+    x_cuda = x.to(device_id).requires_grad_(True)
+    out_layer1_per_rank = myColParallelModule(x_cuda)
+    
+    # Apply ReLU activation
+    relu = nn.ReLU().to(device_id)
+    out_relu_per_rank = relu(out_layer1_per_rank)
+
+    # Create and apply RowParallelLinear module
+    rowParallelLinearModule = RowParallelLinear(rank, weight_per_rank_layer2, bias_layer2).to(
+        device_id)
+    out_layer2 = rowParallelLinearModule(out_relu_per_rank)
+
+    # Compute loss and perform backward pass
+    loss = torch.square(out_layer2 - dummy_labels.to(device_id)).sum()
+    loss.backward()
+
+    # Save outputs and gradients if rank is 0
+    if rank == 0:
+        queue.put(out_layer2.cpu().clone().detach())
+        queue.put(x_cuda.grad.clone().cpu().detach())
+
+```
+
+## Compare against standard MLP layers 
+
+To verify that our parallel MLP implementation works as expected, we compare the activations and gradients against the standard MLP layer implementation. as previously mention, we can extract the activation and gradients using torch distributed queue 
+
+```python 
+if __name__=='__main__':
+    mp.set_start_method('spawn')
+
+    ################################################
+    # Init the weights in the main function 
+    # and pass it to the child processes
+    # to enable checking against the baseline MLP
+    ################################################
+    weight_layer1, bias_layer1, weight_layer2, bias_layer2, x, dummy_labels = init_tensors()
+
+    # Run the baseline MLP to verify parallel MLP logic 
+    base_mlp = BaseMLPLayers(weight_layer1, bias_layer1, weight_layer2, bias_layer2)
+
+    # we are doing some unsual stuff here, cloning the tensor to avoid backprop 
+    # through the distributed code path
+    clone_x = x.clone().requires_grad_(True)
+    # check forward pass output with base MLP
+    base_output = base_mlp(clone_x).cpu()
+
+    # Run the distributed code path including Parallel MLP
+    activations, grad_actual = dist_launcher(2,run_parallel_mlp,weight_layer1,bias_layer1,weight_layer2, 
+                                             bias_layer2, x, dummy_labels)
+    print(base_output[0][0][0:10])
+    print(activations[0][0][0:10])
+
+    assert torch.allclose(base_output, activations, atol=1e-4)
+    print("Parallel MLP output matched with base MLP output")
+
+    # dummy loss function
+    loss = torch.square(base_output-dummy_labels).sum()
+    loss.backward()
+    # calculated gradient for input
+    grad_expected = clone_x.grad
+    print(grad_expected[0][0][0:10])
+    print(grad_actual[0][0][0:10])
+    # gradients have lower tolerance for some reason
+    assert torch.allclose(grad_expected, grad_actual, atol=1e-1)
+    print("Parallel MLP gradient matched with base MLP gradient")
+```
+
+```shell
+tensor([-13.2234,  14.5334,  50.0128,  59.7735,  36.3903, -54.5164,  21.5732,
+        -47.9403,  -8.4203,  57.2465], grad_fn=<SliceBackward0>)
+tensor([-13.2234,  14.5334,  50.0128,  59.7735,  36.3903, -54.5164,  21.5732,
+        -47.9403,  -8.4203,  57.2465])
+Parallel MLP output matched with base MLP output
+tensor([-7869.1587,  1106.3701,  9856.4297,  1074.2012, -9341.9961, 23347.9883,
+        -5745.2598, 22844.5840, -3963.1760,  9396.2031])
+tensor([-7869.1562,  1106.3760,  9856.4316,  1074.2002, -9341.9961, 23347.9922,
+        -5745.2598, 22844.5781, -3963.1763,  9396.2021])
+Parallel MLP gradient matched with base MLP gradient
+```
