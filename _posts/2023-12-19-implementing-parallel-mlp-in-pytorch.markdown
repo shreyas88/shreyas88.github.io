@@ -372,4 +372,4 @@ tensor([-7869.1562,  1106.3760,  9856.4316,  1074.2002, -9341.9961, 23347.9922,
         -5745.2598, 22844.5781, -3963.1763,  9396.2021])
 Parallel MLP gradient matched with base MLP gradient
 ```
-### [Github repo](https://github.com/shreyas88/parallel-mlp-pytorch)
+## [Github repo](https://github.com/shreyas88/parallel-mlp-pytorch)
