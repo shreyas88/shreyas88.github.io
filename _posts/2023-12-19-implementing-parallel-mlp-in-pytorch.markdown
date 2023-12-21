@@ -59,6 +59,7 @@ Initialize the simplified torch distributed setup to enable collective communica
 1. `dist_launcher` spawns multiple processes and handles the synchronization loop
 2. `dist_init` sets up the distributed process group which is used for collective communication ops such as all-reduce, all-to-all etc.
 
+We can extend this simple setup as a skeleton for the final implementation
 ```python
 import os
 import torch
@@ -160,13 +161,16 @@ However, in the backward pass gradient all-reduce op is needed to sum the gradie
 ```python
 import torch
 import torch.nn as nn
+from torch.cuda.amp import custom_fwd, custom_bwd
 
-class LinearColumnWithAsyncGrad(torch.autograd.Function):
+
+class LinearColumnWithGradReduce(torch.autograd.Function):
+    """See linear_with_grad_accumulation_and_async_allreduce"""
     @staticmethod
     @custom_fwd
     def forward(ctx,input,weight,bias):
         ctx.save_for_backward(input, weight)
-        output = torch.matmul(input, weight.t())
+        output = torch.matmul(input, weight)
         return output + bias
 
     @staticmethod
@@ -178,13 +182,17 @@ class LinearColumnWithAsyncGrad(torch.autograd.Function):
 
         # (batch, output_size_partition) * (output_size_partition, input_size) -> (batch, input_size)   
         #  (batch, T, input_size) = (batch, T, 1) * (1, input_size)  
-        grad_input = grad_output.matmul(weight)
+        grad_input = grad_output.matmul(weight.T)
 
         # Asynchronous all-reduce
         handle = torch.distributed.all_reduce(grad_input, async_op=True)
 
+        # collapse first two dimensions
+        grad_output = grad_output.view(-1, grad_output.size(-1))
+        input = input.view(-1, input.size(-1))
+
         # (batch*T, output_size_partition) * (batch*T, input_size_partition) -> (output_size_partition, input_size_partition)
-        grad_weight = grad_output.t().matmul(input)
+        grad_weight = grad_output.t().matmul(input).T
         grad_bias = grad_output.sum(dim=0)
         handle.wait()
         return grad_input, grad_weight, grad_bias
@@ -195,8 +203,9 @@ class ColumnParallelLinear(torch.nn.Module):
     The linear layer is defined as Y = XA + b. A is parallelized along
     its second dimension as A = [A_1, ..., A_p].
     """
-    def __init__(self, weight_per_rank, bias_per_rank):
+    def __init__(self, rank, weight_per_rank, bias_per_rank):
         super(ColumnParallelLinear, self).__init__()
+        self.rank = rank
         self.weight = nn.Parameter(weight_per_rank)
         self.bias = nn.Parameter(bias_per_rank)
 
@@ -213,37 +222,52 @@ In the Row Parallel Layer, the weight matrix is split along the row dimension.  
 2. Backward pass doesn't require any all reduce as the gradients don't need to be combined on the backward pass. 
 
 ```python
+import torch
+import torch.nn as nn
+from torch.cuda.amp import custom_fwd, custom_bwd
+
 class LinearRowWithTensorReduce(torch.autograd.Function):
     @staticmethod
     @custom_fwd
-    def forward(ctx,input,weight,bias):
+    def forward(ctx,input,weight,bias,rank):
         ctx.save_for_backward(input, weight)
-        output = torch.matmul(input, weight.t()) + bias
+        if rank == 0:
+            output = torch.matmul(input, weight) + bias
+        else:
+            output = torch.matmul(input, weight)
         # all reduce along tensor parallel dimension
-        return torch.distributed.all_reduce(output)
+        torch.distributed.all_reduce(output)
+        return output
         
 
     @staticmethod
     @custom_bwd
     def backward(ctx, grad_output):
         input, weight = ctx.saved_tensors
-        grad_input = grad_output.matmul(weight)
-        grad_weight = grad_output.t().matmul(input)
+        # (batch, T, input_size) * (output_size_partition, input_size) -> (batch, T, input_size)
+        grad_input = grad_output.matmul(weight.t())
+        grad_output = grad_output.view(-1, grad_output.size(-1))
+        input = input.view(-1, input.size(-1))
+        # (output_size_partition,batch*T) * (batch*T, input_size) -> (output_size_partition, input_size)
+        grad_weight = input.T.matmul(grad_output)
         grad_bias = grad_output.sum(dim=0)
-        return grad_input, grad_weight, grad_bias
+        return grad_input, grad_weight, grad_bias, None
 
 class RowParallelLinear(torch.nn.Module):
     """Linear layer with row parallelism.
     its second dimension as Z =   X  [ Y1
                                        Y2 ]
     """
-    def __init__(self, weight_per_rank, bias_per_rank):
+    def __init__(self, rank, weight_per_rank, bias_per_rank):
         super(RowParallelLinear, self).__init__()
+        self.rank = rank
+        # weight_per_rank is (output_size_partition, input_size)
         self.weight = nn.Parameter(weight_per_rank)
+        # bias_per_rank is (input_size,)
         self.bias = nn.Parameter(bias_per_rank)
 
     def forward(self, input_: torch.Tensor):
-        LinearRowWithTensorReduce.apply(input_, self.weight, self.bias)
-
+        # input_ is (batch, T, output_size_partition)
+        return LinearRowWithTensorReduce.apply(input_, self.weight, self.bias, self.rank)
 ```
 
