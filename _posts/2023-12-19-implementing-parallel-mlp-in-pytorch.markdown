@@ -8,9 +8,9 @@ The goal of this implementation is to simplify and understand how to implement t
 
 Typically we see the following kinds of parallelism in large transformer models. 
 ### Tensor parallelism 
-Splits the tensor computation across various GPU nodes. Typically this is used within a server datacenter node since this involves all reduce operations(over nvLink network as opposed to slower interconnects) which are expensive collective communication operations.
+Splits the tensor computation across various GPU nodes. Typically this is used within a server datacenter node since this involves all reduce operations
 ### Pipeline parallelism
-Splits the sequential layers of the transformer model across different GPU nodes. This is analogous to the pipelining concept in computer architecture.  Since implementing it requires cheaper communication cost(point to point instead of collective communication) it is typically implemented as we scale beyond a single host machine. 
+Splits the sequential layers of the transformer model across different GPU nodes. This is analogous to the pipelining concept in computer architecture.  Since implementing it requires cheaper communication cost(point to point instead of collective communication) it is typically implemented as we scale beyond a single host machine. [More details](https://arxiv.org/abs/2104.04473)
 ### Data parallelism
 Split the work across the batch axis and reduce the gradients using all-reduce operation. 
 
