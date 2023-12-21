@@ -3,7 +3,8 @@ title: Implementing Parallel MLP in pytorch
 date: 2023-12-19 02:54:00 Z
 ---
 
-Tensor parallel MLP is one of the building blocks of modern distributed transformer based models. 
+Tensor parallel MLP is one of the building blocks of distributed transformer based models. For instance reference check [Parallel mlp layer](https://github.com/EleutherAI/gpt-neox/blob/9283effb37e1b72acef265d17cbe37881441e88c/megatron/model/transformer.py#L71) in GPT neox. 
+The goal of this implementation is to simplify some of the logic to the core elements. 
 
 Typically we see the following kinds of parallelism 
 ### Tensor parallelism 
@@ -369,3 +370,4 @@ tensor([-7869.1562,  1106.3760,  9856.4316,  1074.2002, -9341.9961, 23347.9922,
         -5745.2598, 22844.5781, -3963.1763,  9396.2021])
 Parallel MLP gradient matched with base MLP gradient
 ```
+Github repo: https://github.com/shreyas88/parallel-mlp-pytorch
