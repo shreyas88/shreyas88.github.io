@@ -313,7 +313,7 @@ def run_parallel_mlp(rank, queue, weight_layer1, bias_layer1, weight_layer2,bias
 
 ```
 
-## Compare against standard MLP layers 
+## Test forward and backward pass
 
 To verify that our parallel MLP implementation works as expected, we compare the activations and gradients against the standard MLP layer implementation. as previously mention, we can extract the activation and gradients using torch distributed queue 
 
