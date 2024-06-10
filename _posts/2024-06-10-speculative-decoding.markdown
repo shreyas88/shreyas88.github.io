@@ -5,25 +5,26 @@ date: 2024-06-10 22:16:00 Z
 
 [Speculative decoding paper](https://arxiv.org/pdf/2211.17192)
 
-### Preliminaries
+## Preliminaries
 
 LLM inference is a serialized process where each new token is generated conditioned on the previously accumulated tokens. This implies that n iterations of LLM inference requires n steps and these steps can’t be parallelized as the input of the current step depends on the output tokens from the previous step. 
 
 Token generation step consists of sampling from a probability distribution over the set of all possible tokens in the vocabulary. Normally this part is abstracted from the end user and we observe the generated tokens directly but for this discussion we would be operating on the probability distribution over tokens hence it is important to get the notation.
 
 
-### Motivation
+## Motivation
 
-#### 
+### Available compute capacity
 The LLM inference process is inherently bottlenecked by the memory due to the auto regressive (generate one token at a time) nature. In simple terms it means that the wallclock time is dominated by data transfers(model weights, kv cache) as opposed to performing the actual matrix multiplies on GPU. 
 
 This implies we can perform additional parallel computations on GPU per memory access without impacting the wallclock time.  If you want to understand this tradeoff further from first principles, please refer to this fantastic blog https://horace.io/brrr_intro.html
 
-`Observation 2`: Some tokens are easier to predict for the LLM than other tokens. Eg for code generation maybe curly braces after if statement, generation of stop words, conjunctions and other easier to predict words. In theory, it should be possible for a much smaller model to predict those easier tokens and offload some computation from a larger model.
+### Approximate inference
+Some tokens are easier to predict for the LLM than other tokens. Eg for code generation maybe curly braces after if statement, generation of stop words, conjunctions and other easier to predict words. In theory, it should be possible for a smaller model to predict those easier tokens and offload some computation from a larger model.
 
 Speculative decoding technique exploits the above observations to enable inference speedup. It consists of using a faster, smaller approximate model(M_q) to predict K lookahead tokens in parallel to the main larger, slower baseline model(M_p). The name of the technique comes from these lookahead tokens which are speculative in nature i.e. can be rejected if they don’t match the verification step and generation restarts from the previously accepted point. The idea is inspired by speculative execution which is commonly employed in modern CPU processors where the processor is typically predicting branches speculatively to better overlap computation and memory access. 
 
-### Overview
+## Overview
 
 1. The basic idea is that in the amount of time it takes to generate a single auto-regressive token on the larger model M_p, we can generate multiple such tokens on the smaller model M_q(draft model).
 2. We then “check” these generated lookahead tokens and only accept them if it matches some criteria.  
@@ -33,7 +34,7 @@ Speculative decoding technique exploits the above observations to enable inferen
 
 The advantage of above procedure is that algorithm enables the model to skip forward a few tokens if the tokens produced by draft model are deemed "good enough". The hope is that in steady state, we are able to get more than 1 tokens generated in the steady state. In the paper they show 2-3x speedup on baseline implementation. 
 
-### Details
+## Details
 ![Screenshot 2024-06-10 at 3.20.15 PM-c84039.png](/uploads/Screenshot%202024-06-10%20at%203.20.15%E2%80%AFPM-c84039.png)
 In a single speculative decoding iteration, we have the inputs previously generated tokens called prefix tokens, base model and draft model. 
 
