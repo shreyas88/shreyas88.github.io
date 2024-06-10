@@ -5,14 +5,9 @@ date: 2024-06-10 22:16:00 Z
 
 [Speculative decoding paper](https://arxiv.org/pdf/2211.17192)
 
-## Preliminaries
+## Introduction
 
 LLM inference is a serialized process where each new token is generated conditioned on the previously accumulated tokens. This implies that n iterations of LLM inference requires n steps and these steps can’t be parallelized as the input of the current step depends on the output tokens from the previous step. 
-
-Token generation step consists of sampling from a probability distribution over the set of all possible tokens in the vocabulary. Normally this part is abstracted from the end user and we observe the generated tokens directly but for this discussion we would be operating on the probability distribution over tokens hence it is important to get the notation.
-
-
-## Motivation
 
 ### Available compute capacity
 The LLM inference process is inherently bottlenecked by the memory due to the auto regressive (generate one token at a time) nature. In simple terms it means that the wallclock time is dominated by data transfers(model weights, kv cache) as opposed to performing the actual matrix multiplies on GPU. 
@@ -22,7 +17,13 @@ This implies we can perform additional parallel computations on GPU per memory a
 ### Approximate inference
 Some tokens are easier to predict for the LLM than other tokens. Eg for code generation maybe curly braces after if statement, generation of stop words, conjunctions and other easier to predict words. In theory, it should be possible for a smaller model to predict those easier tokens and offload some computation from a larger model.
 
-Speculative decoding technique exploits the above observations to enable inference speedup. It consists of using a faster, smaller approximate model(M_q) to predict K lookahead tokens in parallel to the main larger, slower baseline model(M_p). The name of the technique comes from these lookahead tokens which are speculative in nature i.e. can be rejected if they don’t match the verification step and generation restarts from the previously accepted point. The idea is inspired by speculative execution which is commonly employed in modern CPU processors where the processor is typically predicting branches speculatively to better overlap computation and memory access. 
+Speculative decoding technique exploits the above observations to enable inference speedup. It consists of using a faster, smaller approximate model(M_q) to predict K lookahead tokens in parallel to the main larger, slower baseline model(M_p). The name of the technique comes from these lookahead tokens which are speculative in nature i.e. can be rejected if they don’t match the verification step and generation restarts from the previously accepted point. The idea is inspired by [speculative execution](https://en.wikipedia.org/wiki/Speculative_execution#:~:text=Speculative%20execution%20is%20an%20optimization,known%20that%20it%20is%20needed.) which is commonly employed in modern CPU processors where the processor is typically predicting branches speculatively to better overlap computation and memory access. 
+
+## Notation
+
+Token generation step consists of sampling from a probability distribution over the set of all possible tokens in the vocabulary. Normally this part is abstracted from the end user and we observe the generated tokens directly but for this discussion we would be operating on the probability distribution over tokens hence it is important to understand the notation.
+
+
 
 ## Overview
 
@@ -37,6 +38,7 @@ The advantage of above procedure is that algorithm enables the model to skip for
 ## Details
 
 ![Screenshot 2024-06-10 at 3.20.15 PM-4daddb.png](/uploads/Screenshot%202024-06-10%20at%203.20.15%E2%80%AFPM-4daddb.png)
+
 In a single speculative decoding iteration, we have the inputs previously generated tokens called prefix tokens, base model and draft model. 
 
 We generate tokens k speculative tokens from the draft model spec_tokens
@@ -45,7 +47,7 @@ In parallel, consider the k sequences - `prefix + spec_tokens[:i]`
 
 For each of the sequences, we extract the corresponding probability distribution from the base model by `prefix + spec_tokens[:i]`. This corresponds to one inference generation for the base model.
 
-Let's break it down step wise
+Let's break the accept/reject criteria step wise:
 
 1. If q(x) <= p(x) then we accept the token since the base model is more likely to generate this token and generally the speculative token stream emitted from the draft model is aligned with the base model token stream
 
