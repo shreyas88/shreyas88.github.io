@@ -1,5 +1,5 @@
 ---
-title: Speculative Decoding
+title: 'LLM inference optimization: Speculative Decoding'
 date: 2024-06-10 22:16:00 Z
 ---
 
