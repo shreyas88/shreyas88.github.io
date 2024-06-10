@@ -33,22 +33,21 @@ The advantage of above procedure is that algorithm enables the model to skip for
 ### Details
 ![Screenshot 2024-06-10 at 3.20.15 PM.png](/uploads/Screenshot%202024-06-10%20at%203.20.15%E2%80%AFPM.png)
 
+In a single speculative decoding iteration, we have the inputs previously generated tokens called prefix tokens, base model and draft model. 
+
+* We generate tokens k speculative tokens from the draft model spec_tokens
+* In parallel, consider the k sequences - `prefix + spec_tokens[:i]`
+* For each of the sequences, we extract the corresponding probability distribution from the base model by `prefix + spec_tokens[:i]`. This corresponds to one inference generation for the base model.
+
 Let's break it down step wise
 
-If q(x) <= p(x) then we accept the token since the base model is more likely to generate this token and generally the speculative token stream emitted from the draft model is aligned with the base model token stream
+1. If q(x) <= p(x) then we accept the token since the base model is more likely to generate this token and generally the speculative token stream emitted from the draft model is aligned with the base model token stream
 
-If q(x) > p(x) 
-In this case we roughly want to reject tokens based on deviation/error roughly speaking if q(x) is only slightly higher than p(x) then we should probably accept the token since the error is fairly low. On the other extreme if p(x) = 0 i.e. base model doesn’t emit the token x,  then we want to reject this token since the spec token stream is misaligned with the base token stream. 
+2. If q(x) > p(x) : In this case we roughly want to reject tokens based on deviation/error roughly speaking if q(x) is only slightly higher than p(x) then we should probably accept the token since the error is fairly low. On the other extreme if p(x) = 0 i.e. base model doesn’t emit the token x,  then we want to reject this token since the spec token stream is misaligned with the base token stream. 
 
 This can be accomplished if we sample probabilistically (q(x)-p(x))/q(x)
 
 
-In a single speculative decoding iteration, we have the inputs previously generated tokens called prefix tokens, base model and draft model. 
-
-We generate tokens k speculative tokens from the draft model spec_tokens
-In parallel, 
-Consider the k sequences - prefix + spec_tokens[:i]
-For each of the sequences, we extract the corresponding probability distribution from the base model by prefix + spec_tokens[:i]. This corresponds to one inference generation for the base model.
     -  We apply the accept/reject criterias discussed in the above section and find the first of the k token which is rejected(or none if all are accepted)
     - From the rejected token, we append back the tokens upto the rejected token to the input prefix tokens for next epoch of speculative decoding. 
 - Additionally, in order to ensure forward progress for each epoch(in case we fail to get any token accepted) we generate one additional sample from the adjusted probability distribution  p'(x) = \text{norm}(\max(0, p_{n+1}(x) - q_{n+1}(x)))
