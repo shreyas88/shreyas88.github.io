@@ -4,27 +4,27 @@ date: 2024-06-10 22:16:00 Z
 ---
 
 
-Preliminaries
+### Preliminaries
 
 LLM inference is a serialized process where each new token is generated conditioned on the previously accumulated tokens. This implies that n iterations of LLM inference requires n steps and these steps can’t be parallelized as the input of the current step depends on the output tokens from the previous step. 
 
 Token generation step consists of sampling from a probability distribution over the set of all possible tokens in the vocabulary. Normally this part is abstracted from the end user and we observe the generated tokens directly but for this discussion we would be operating on the probability distribution over tokens hence it is important to get the notation.
 
 
-Motivation
+### Motivation
 
-Observation1: The LLM inference process is inherently bottlenecked by the memory due to the auto regressive (generate one token at a time) nature. In simple terms it means that the wallclock time is dominated by data transfers(model weights, kv cache) as opposed to performing the actual matrix multiplies on GPU. This implies we can perform additional parallel computations on GPU per memory access without impacting the wallclock time.  If you want to understand this tradeoff further please refer to this fantastic blog https://horace.io/brrr_intro.html , additionally for deeper understanding for LLM inference characteristics 
+#### Observation1: The LLM inference process is inherently bottlenecked by the memory due to the auto regressive (generate one token at a time) nature. In simple terms it means that the wallclock time is dominated by data transfers(model weights, kv cache) as opposed to performing the actual matrix multiplies on GPU. This implies we can perform additional parallel computations on GPU per memory access without impacting the wallclock time.  If you want to understand this tradeoff further please refer to this fantastic blog https://horace.io/brrr_intro.html , additionally for deeper understanding for LLM inference characteristics 
 
-Observation 2: Some tokens are easier to predict for the LLM than other tokens. Eg for code generation maybe curly braces after if statement, generation of stop words, conjunctions and other easier to predict words. In theory, it should be possible for a much smaller model to predict those easier tokens and offload some computation from a larger model.
+#### Observation 2: Some tokens are easier to predict for the LLM than other tokens. Eg for code generation maybe curly braces after if statement, generation of stop words, conjunctions and other easier to predict words. In theory, it should be possible for a much smaller model to predict those easier tokens and offload some computation from a larger model.
 
 Speculative decoding technique exploits the above observations to enable inference speedup. It consists of using a faster, smaller approximate model(M_q) to predict K lookahead tokens in parallel to the main larger, slower baseline model(M_p). The name of the technique comes from these lookahead tokens which are speculative in nature i.e. can be rejected if they don’t match the verification step and generation restarts from the previously accepted point. The idea is inspired by speculative execution which is commonly employed in modern CPU processors where the processor is typically predicting branches speculatively to better overlap computation and memory access. 
 
-Overview
+### Overview
 
 The basic idea is that in the amount of time it takes to generate a single auto-regressive token on the larger model M_p, we can generate multiple such tokens on the smaller model M_q(draft model). We then “check” these generated lookahead tokens and only accept them if it matches some criteria. 
 Note that it takes the same amount of time to generate 1 additional token and K fast forwarded additional tokens from the base model in parallel due to the memory bound nature of LLM inference as discussed earlier.  In this step we effectively fast forward the baseline model on the speculative tokens generated earlier i.e. {token1}, {token1, token2}, {token1, token2, token3} , … etc  to enable the checking against the draft tokens.
 
-Details
+### Details
 ![Screenshot 2024-06-10 at 3.20.15 PM.png](/uploads/Screenshot%202024-06-10%20at%203.20.15%E2%80%AFPM.png)
 
 Let's break it down step wise
