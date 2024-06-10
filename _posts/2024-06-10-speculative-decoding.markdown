@@ -31,8 +31,7 @@ Speculative decoding technique exploits the above observations to enable inferen
 The advantage of above procedure is that algorithm enables the model to skip forward a few tokens if the tokens produced by draft model are deemed "good enough". The hope is that in steady state, we are able to get more than 1 tokens generated in the steady state. In the paper they show 2-3x speedup on baseline implementation. 
 
 ### Details
-![Screenshot 2024-06-10 at 3.20.15 PM.png](/uploads/Screenshot%202024-06-10%20at%203.20.15%E2%80%AFPM.png)
-
+![Screenshot 2024-06-10 at 3.20.15 PM-c84039.png](/uploads/Screenshot%202024-06-10%20at%203.20.15%E2%80%AFPM-c84039.png)
 In a single speculative decoding iteration, we have the inputs previously generated tokens called prefix tokens, base model and draft model. 
 
 * We generate tokens k speculative tokens from the draft model spec_tokens
