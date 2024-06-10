@@ -21,9 +21,14 @@ Speculative decoding technique exploits the above observations to enable inferen
 
 ## Notation
 
-Token generation step consists of sampling from a probability distribution over the set of all possible tokens in the vocabulary. Normally this part is abstracted from the end user and we observe the generated tokens directly but for this discussion we would be operating on the probability distribution over tokens hence it is important to understand the notation.
+Token generation step consists of sampling from a probability distribution over the set of all possible tokens in the vocabulary. Normally this part is abstracted from the end user and we observe the generated tokens directly but for this discussion we would be operating on the probability distribution over tokens hence it is important to understand the notation. 
 
-
+Single step LLM inference: 
+`x`: Input token sequence 
+`p(x)`: Output probability sequence eg output probability over all possible english letters(ignore tokenization here for sake of clarity). This probability distribution represents the probability of next token 
+`x ~ p(x)`: Next token sampled from the above probability distribution
+`p(x)` : Base model probability distribution
+`q(x)` : Draft model probability distribution
 
 ## Overview
 
