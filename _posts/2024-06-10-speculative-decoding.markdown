@@ -34,9 +34,11 @@ The advantage of above procedure is that algorithm enables the model to skip for
 ![Screenshot 2024-06-10 at 3.20.15 PM-c84039.png](/uploads/Screenshot%202024-06-10%20at%203.20.15%E2%80%AFPM-c84039.png)
 In a single speculative decoding iteration, we have the inputs previously generated tokens called prefix tokens, base model and draft model. 
 
-* We generate tokens k speculative tokens from the draft model spec_tokens
-* In parallel, consider the k sequences - `prefix + spec_tokens[:i]`
-* For each of the sequences, we extract the corresponding probability distribution from the base model by `prefix + spec_tokens[:i]`. This corresponds to one inference generation for the base model.
+We generate tokens k speculative tokens from the draft model spec_tokens
+
+In parallel, consider the k sequences - `prefix + spec_tokens[:i]`
+
+For each of the sequences, we extract the corresponding probability distribution from the base model by `prefix + spec_tokens[:i]`. This corresponds to one inference generation for the base model.
 
 Let's break it down step wise
 
