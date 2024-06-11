@@ -62,6 +62,36 @@ Let's break the accept/reject criteria step wise:
 
 2. If **`q(x) > p(x)`** : In this case we roughly want to reject tokens based on deviation/error roughly speaking if **`q(x)`** is only slightly higher than `p(x)` then we should probably accept the token since the error is fairly low. On the other extreme if **`p(x) = 0`** i.e. base model doesn’t emit the token **`x`**,  then we want to reject this token since the spec token stream is misaligned with the base token stream. This can be accomplished if we sample probabilistically **`(q(x)-p(x))/q(x)`**
 
+Pytorch implementation(adapted and simplified from [vllm repo](https://github.com/cadedaniel/vllm-public/blob/853180f8bc5e335b07f0ef7be8079b3e1b7fe0d3/vllm/model_executor/layers/rejection_sampler.py))
+
+```python
+    def get_accepted(
+            self,
+            target_probs: torch.Tensor,  # [batch_size, k, vocab_size]
+            draft_probs: torch.Tensor,  # [batch_size, k, vocab_size]
+            draft_token_ids: torch.Tensor,  # [batch_size, k]
+    ) -> torch.Tensor:
+        r"""Create bool matrix over the proposed draft tokens. If
+        True, then a token can be accepted, else it should be
+        rejected.
+        Returns a bool tensor of shape [batch_size, k] specifying which tokens
+        are accepted.
+        """
+        batch_size, k, _ = draft_probs.shape
+        # shape [batch_size, k]
+        selected_draft_probs = torch.gather(draft_probs, 2, draft_token_ids.unsqueeze(-1)).squeeze(-1)
+
+        # shape [batch_size, k]
+        selected_target_probs = torch.gather(target_probs, 2, draft_token_ids.unsqueeze(-1)).squeeze(-1)
+
+        uniform_rand = torch.rand(batch_size,k)
+        capped_ratio = torch.minimum(
+            selected_target_probs / selected_draft_probs,
+            torch.full((1, ), 1, device=target_probs.device))
+        accepted = uniform_rand < capped_ratio
+        return accepted
+```
+
 3. We apply the accept/reject criterias discussed in the above section and find the first of the k token which is rejected(or none if all are accepted)
 
 4. From the rejected token, we append back the tokens upto the rejected token to the input prefix tokens for next epoch of speculative decoding. 
