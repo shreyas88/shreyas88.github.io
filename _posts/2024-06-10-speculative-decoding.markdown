@@ -18,7 +18,11 @@ This implies we can perform additional parallel computations on GPU per memory a
 Some tokens are easier to predict for the LLM than other tokens. Eg for code generation maybe curly braces after if statement, generation of stop words, conjunctions and other easier to predict words. In theory, it should be possible for a smaller model to predict those easier tokens and offload some computation from a larger model.
 
 ### Speculative decoding to the rescue
-Speculative decoding technique exploits the above observations to enable inference speedup. It consists of using a faster, smaller approximate model(M_q) to predict K lookahead tokens in parallel to the main larger, slower baseline model(M_p). The name of the technique comes from these lookahead tokens which are speculative in nature i.e. can be rejected if they don’t match the verification step and generation restarts from the previously accepted point. The idea is inspired by [speculative execution](https://en.wikipedia.org/wiki/Speculative_execution#:~:text=Speculative%20execution%20is%20an%20optimization,known%20that%20it%20is%20needed.) which is commonly employed in modern CPU processors where the processor is typically predicting branches speculatively to better overlap computation and memory access. 
+Speculative decoding technique exploits the above observations to enable inference speedup. It consists of using a faster, smaller approximate model(M_q) to predict K lookahead tokens in parallel to the main larger, slower baseline model(M_p). 
+
+The name of the technique comes from these lookahead tokens which are speculative in nature i.e. we first verify that the tokens guessed by the draft model are indeed correct. The key observation is that this verification of K lookahead tokens can happen in a single forward pass through K inferences of the baseline model in parallel. Additionally, since inference is mostly memory bound the K inferences don't take additional wallclock time as compared to a single inference. This enables a speedup since we are able to fast forward easy to guess tokens.
+
+The idea is inspired by [speculative execution](https://en.wikipedia.org/wiki/Speculative_execution#:~:text=Speculative%20execution%20is%20an%20optimization,known%20that%20it%20is%20needed.) which is commonly employed in modern CPU processors where the processor is typically predicting branches speculatively to better overlap computation and memory access. 
 
 ## Notation
 
