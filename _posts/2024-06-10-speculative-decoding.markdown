@@ -46,7 +46,7 @@ Additionally we use p->target model, q->draft model
 ## Overview
 
 1.  Generate K lookahead tokens using **`M_q`**(draft model)
-2. “Check” these generated lookahead tokens and accept them if it aligns with target model output distribution for  
+2. “Check” these generated lookahead tokens and accept them if it aligns with target model output distribution  
 3. The algorithm guarantees that sampling tokens from both models are theoretically equivalent - **`x ~ p(x)`** and **`x ~ q(x)`**
 
 The advantage of above procedure is that algorithm enables the model to skip forward a few tokens in a single iteration if the tokens produced by draft model are deemed "good enough". The hope is that in expectation, we are able to get more than 1 tokens accepted. In the paper they show 2-3x speedup on the target implementation. 
