@@ -25,7 +25,7 @@ Additional reading for more context, please refer to these public blogs:
 Some tokens are easier to predict for the LLM than other tokens. Eg for code generation maybe curly braces after if statement, generation of stop words, conjunctions and other easier to predict words. In theory, it should be possible for a smaller model to predict those easier tokens and offload some computation from a larger model.
 
 ### Speculative decoding
-Speculative decoding technique exploits the above observations to speedup inference. We use a faster, smaller approximate model(M_q) to predict K lookahead tokens in parallel to the main larger, slower target model(M_p).
+Speculative decoding technique exploits the above observations to speedup inference. We use a faster, smaller approximate model **`M_q`** to predict K lookahead tokens in parallel to the main larger, slower target model **`M_p`**.
 
 **The key observation is that this verification of K lookahead tokens can happen in a single forward pass**. Additionally, forward pass for K tokens takes the same amount of wall clock time as a single token as we are memory bound in inference. We can potentially fast forward past multiple easy to guess tokens in a single iteration. The name of the technique comes from these lookahead tokens which are speculative in nature i.e. we first verify that the tokens guessed by the draft model are indeed correct.
 
