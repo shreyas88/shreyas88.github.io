@@ -14,7 +14,12 @@ In order to speed up inference, we make the following observations:
 ### Inference is memory bound
 The LLM inference process is inherently bottlenecked by the memory due to the auto regressive (generate one token at a time) nature. In simple terms it means that the wallclock time is dominated by data transfers(model weights, kv cache) as opposed to performing the actual matrix multiplies on GPU. 
 
-This implies we can get away with performing additional computations on GPU per memory access without impacting the wallclock time.  If you want to understand this tradeoff further from first principles, please refer to this [fantastic blog by Horace He](https://horace.io/brrr_intro.html) 
+This implies we can get away with performing additional computations on GPU per memory access without impacting the wallclock time.  
+
+Additional reading for more context, please refer to these public blogs:
+[blog by Horace He](https://horace.io/brrr_intro.html) 
+[Transformer inference arithmetic](https://kipp.ly/transformer-inference-arithmetic/) 
+
 
 ### Not all tokens are created equal
 Some tokens are easier to predict for the LLM than other tokens. Eg for code generation maybe curly braces after if statement, generation of stop words, conjunctions and other easier to predict words. In theory, it should be possible for a smaller model to predict those easier tokens and offload some computation from a larger model.
