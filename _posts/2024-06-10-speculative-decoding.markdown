@@ -11,7 +11,7 @@ LLM inference is a serialized process where each new token is generated conditio
 
 In order to speed up inference, we make the following observations:
 
-### Inference memory bound
+### Inference is memory bound
 The LLM inference process is inherently bottlenecked by the memory due to the auto regressive (generate one token at a time) nature. In simple terms it means that the wallclock time is dominated by data transfers(model weights, kv cache) as opposed to performing the actual matrix multiplies on GPU. 
 
 This implies we can get away with performing additional computations on GPU per memory access without impacting the wallclock time.  If you want to understand this tradeoff further from first principles, please refer to this [fantastic blog by Horace He](https://horace.io/brrr_intro.html) 
