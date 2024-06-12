@@ -16,7 +16,7 @@ The LLM inference process is inherently bottlenecked by the memory due to the au
 
 This implies we can get away with performing additional computations on GPU per memory access without impacting the wallclock time.  If you want to understand this tradeoff further from first principles, please refer to this [fantastic blog by Horace He](https://horace.io/brrr_intro.html) 
 
-### Tokens vary in difficulty
+### Not all tokens are created equal
 Some tokens are easier to predict for the LLM than other tokens. Eg for code generation maybe curly braces after if statement, generation of stop words, conjunctions and other easier to predict words. In theory, it should be possible for a smaller model to predict those easier tokens and offload some computation from a larger model.
 
 ### Speculative decoding
