@@ -130,4 +130,4 @@ Roughly speaking, we are trying to sample a new frontier of the token space whic
 ```
 
 ## Caveat
-In the paper they evaluate gains on batch_size=1, however with much larger batch size, larger sequence size and generally higher utilization(compute bound regime) the gains from speculative decoding would be limited. 
+In the paper they evaluate gains on batch_size=1, however with much larger batch size, larger sequence size and generally higher utilization(compute bound regime) the gains from speculative decoding would be lower. 
