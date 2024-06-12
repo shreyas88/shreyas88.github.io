@@ -41,7 +41,7 @@ Additionally we use p->target model, q->draft model
 ## Overview
 
 1.  Generate K lookahead tokens using **`M_q`**(draft model)
-2. “Check” these generated lookahead tokens and only accept them if it matches some criteria.  
+2. “Check” these generated lookahead tokens and accept them if it aligns with target model output distribution for  
 3. The algorithm guarantees that sampling tokens from both models are theoretically equivalent - **`x ~ p(x)`** and **`x ~ q(x)`**
 
 The advantage of above procedure is that algorithm enables the model to skip forward a few tokens in a single iteration if the tokens produced by draft model are deemed "good enough". The hope is that in expectation, we are able to get more than 1 tokens accepted. In the paper they show 2-3x speedup on the target implementation. 
@@ -51,6 +51,7 @@ The advantage of above procedure is that algorithm enables the model to skip for
 Input: prefix tokens, target model and draft model. 
 Output: One or more tokens 
 
+[spec-decode.excalidraw](/uploads/spec-decode.excalidraw)
 Pytorch implementation[vllm repo](https://github.com/cadedaniel/vllm-public/blob/853180f8bc5e335b07f0ef7be8079b3e1b7fe0d3/vllm/model_executor/layers/rejection_sampler.py))
 
 ### Draft & Target model inference
@@ -58,20 +59,21 @@ Pytorch implementation[vllm repo](https://github.com/cadedaniel/vllm-public/blob
 The first step is to generate speculative tokens using the draft model and 
 
 1. Generate k tokens from the draft model. 
-inputs : prefix tokens, draft model  ->  outputs: **`draft_token_ids: [batch_size, k]`**, **`draft_probs: [batch_size, k, vocab_size]`**
-2. Target model inference on draft token ids
-inputs: prefix tokens, target model, draft_token_ids -> outputs:  **`target_probs: [batch_size, k, vocab_size]`**.
-
-The outputs from this step feed into rejection sampling
+inputs : prefix tokens, draft model
+outputs: **`draft_token_ids: [batch_size, k]`**, **`draft_probs: [batch_size, k, vocab_size]`**
+2. Target model inference and get probabilities on the generated draft token ids for verification
+inputs: prefix tokens, target model, draft_token_ids
+outputs:  **`target_probs: [batch_size, k, vocab_size]`**.
 
 ### Rejection sampling
-Let's break the accept/reject criteria step wise:
+First let's break the accept/reject criteria step wise at the token level. Reminder q -> draft faster approximation model, p -> target model
 
 If **`q(x) <= p(x)`** then we accept the token since the target model is more likely to generate this token and generally the speculative token stream emitted from the draft model is aligned with the target model token stream
 
-If **`q(x) > p(x)`** : In this case we roughly want to reject tokens based on deviation/error roughly speaking if **`q(x)`** is only slightly higher than `p(x)` then we should probably accept the token since the error is fairly low. On the other extreme if **`p(x) = 0`** i.e. target model doesn’t emit the token **`x`**,  then we want to reject this token since the spec token stream is misaligned with the base token stream. This can be accomplished if we sample probabilistically **`(q(x)-p(x))/q(x)`**
+If **`q(x) > p(x)`** : In this case we roughly want to reject tokens based on deviation/error roughly speaking if **`p(x)`**  is only slightly lower than  **`q(x)`** then we should probably accept the token since the error is fairly low. 
+On the other extreme, if **`p(x) = 0`** i.e. target model never emits the token **`x`** given the context,  then we want to reject this token since the spec token stream is misaligned with the base token stream. This can be accomplished if we sample probabilistically **`(q(x)-p(x))/q(x)`**
 
-
+The following code from vllm repo illustrates the idea
 ```python
     def get_accepted(
             self,
@@ -103,11 +105,8 @@ If **`q(x) > p(x)`** : In this case we roughly want to reject tokens based on de
         return accepted
 ```
 
-3. We apply the accept/reject criterias discussed in the above section and find the first of the k token which is rejected(or none if all are accepted)
 
-4. From the rejected token, we append back the tokens upto the rejected token to the input prefix tokens for next iteration of speculative decoding. 
-
-5. Additionally, in order to ensure forward progress for each iteration(in case we fail to get any token accepted) we generate one additional sample from the adjusted probability distribution  **p'(x) = \text{norm}(\max(0, p_{n+1}(x) - q_{n+1}(x)))**
+2. Additionally, in order to ensure forward progress for each iteration(in case we fail to get any token accepted) we generate one additional sample from the adjusted probability distribution  **p'(x) = \text{norm}(\max(0, p_{n+1}(x) - q_{n+1}(x)))**
 
 ```python
  # generate recovered tokens for case where samples get rejected
