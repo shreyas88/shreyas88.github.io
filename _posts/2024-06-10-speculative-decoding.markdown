@@ -61,13 +61,13 @@ Pytorch implementation [vllm repo](https://github.com/cadedaniel/vllm-public/blo
 
 ### Draft & Target model inference
 
-The first step is to generate speculative tokens using the draft model and 
+The first step is to generate speculative tokens using the draft model and extract probabilities from the target model. 
 
 1. Generate k tokens from the draft model. 
-inputs : `prefix tokens, draft model`
+inputs : **`prefix tokens, draft model`**
 outputs: **`draft_token_ids: [batch_size, k]`**, **`draft_probs: [batch_size, k, vocab_size]`**
 2. Target model inference and get probabilities on the generated draft token ids for verification
-inputs: `prefix tokens, target model, draft_token_ids`
+inputs: **`prefix tokens, target model, draft_token_ids`**
 outputs:  **`target_probs: [batch_size, k, vocab_size]`**.
 
 ### Rejection sampling
