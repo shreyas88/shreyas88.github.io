@@ -22,7 +22,7 @@ Some tokens are easier to predict for the LLM than other tokens. Eg for code gen
 ### Speculative decoding
 Speculative decoding technique exploits the above observations to speedup inference. We use a faster, smaller approximate model(M_q) to predict K lookahead tokens in parallel to the main larger, slower target model(M_p).
 
-The key observation is that this verification of K lookahead tokens can happen in a single forward pass. Additionally, forward pass for K tokens takes the same amount of wall clock time as a single token as we are memory bound in inference. We can potentially fast forward past multiple easy to guess tokens in a single iteration. The name of the technique comes from these lookahead tokens which are speculative in nature i.e. we first verify that the tokens guessed by the draft model are indeed correct.
+*The key observation is that this verification of K lookahead tokens can happen in a single forward pass*. Additionally, forward pass for K tokens takes the same amount of wall clock time as a single token as we are memory bound in inference. We can potentially fast forward past multiple easy to guess tokens in a single iteration. The name of the technique comes from these lookahead tokens which are speculative in nature i.e. we first verify that the tokens guessed by the draft model are indeed correct.
 
 The idea is inspired by [speculative execution](https://en.wikipedia.org/wiki/Speculative_execution#:~:text=Speculative%20execution%20is%20an%20optimization,known%20that%20it%20is%20needed.) which is traditional technique employed in modern CPU processors where the processor is typically predicting branches speculatively to better overlap computation and memory access. 
 
@@ -35,15 +35,14 @@ Single step LLM inference:
 2. **`p(x)`**: Output probability sequence eg output probability over all possible english letters(ignore tokenization here for sake of clarity). This probability distribution represents the probability of next token 
 3. **`x ~ p(x)`**: Next token sampled from the above probability distribution
 Additionally we use p->target model, q->draft model
-4. **`p(x)`** : target model probability distribution
+4. **`p(x)`** : Target model probability distribution
 5. **`q(x)`** : Draft model probability distribution
 
 ## Overview
 
-1.  the amount of time it takes to generate a single token on the larger model **`M_p`**, we can generate multiple such tokens on the smaller model **`M_q`**(draft model).
+1.  Generate K lookahead tokens using **`M_q`**(draft model)
 2. “Check” these generated lookahead tokens and only accept them if it matches some criteria.  
-3. In the verification step, we take the probabilities output from the target model and compare the corresponding probabilities from draft model. The speculative sampling algorithm then accepts/rejects some of these generated tokens based on some properties of probability distributions(details below). 
-4. The algorithm guarantees that sampling tokens from both models are theoretically equivalent - **`x ~ p(x)`** and **`x ~ q(x)`**
+3. The algorithm guarantees that sampling tokens from both models are theoretically equivalent - **`x ~ p(x)`** and **`x ~ q(x)`**
 
 The advantage of above procedure is that algorithm enables the model to skip forward a few tokens in a single iteration if the tokens produced by draft model are deemed "good enough". The hope is that in expectation, we are able to get more than 1 tokens accepted. In the paper they show 2-3x speedup on the target implementation. 
 
