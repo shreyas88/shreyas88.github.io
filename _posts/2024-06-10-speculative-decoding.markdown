@@ -22,7 +22,7 @@ Some tokens are easier to predict for the LLM than other tokens. Eg for code gen
 ### Speculative decoding
 Speculative decoding technique exploits the above observations to speedup inference. We use a faster, smaller approximate model(M_q) to predict K lookahead tokens in parallel to the main larger, slower target model(M_p).
 
-*The key observation is that this verification of K lookahead tokens can happen in a single forward pass*. Additionally, forward pass for K tokens takes the same amount of wall clock time as a single token as we are memory bound in inference. We can potentially fast forward past multiple easy to guess tokens in a single iteration. The name of the technique comes from these lookahead tokens which are speculative in nature i.e. we first verify that the tokens guessed by the draft model are indeed correct.
+**The key observation is that this verification of K lookahead tokens can happen in a single forward pass**. Additionally, forward pass for K tokens takes the same amount of wall clock time as a single token as we are memory bound in inference. We can potentially fast forward past multiple easy to guess tokens in a single iteration. The name of the technique comes from these lookahead tokens which are speculative in nature i.e. we first verify that the tokens guessed by the draft model are indeed correct.
 
 The idea is inspired by [speculative execution](https://en.wikipedia.org/wiki/Speculative_execution#:~:text=Speculative%20execution%20is%20an%20optimization,known%20that%20it%20is%20needed.) which is traditional technique employed in modern CPU processors where the processor is typically predicting branches speculatively to better overlap computation and memory access. 
 
