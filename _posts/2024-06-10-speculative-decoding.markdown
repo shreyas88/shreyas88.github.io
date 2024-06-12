@@ -51,7 +51,8 @@ The advantage of above procedure is that algorithm enables the model to skip for
 Input: prefix tokens, target model and draft model. 
 Output: One or more tokens 
 
-[spec-decode.excalidraw](/uploads/spec-decode.excalidraw)
+![specdec.png](/uploads/specdec.png)
+
 Pytorch implementation[vllm repo](https://github.com/cadedaniel/vllm-public/blob/853180f8bc5e335b07f0ef7be8079b3e1b7fe0d3/vllm/model_executor/layers/rejection_sampler.py))
 
 ### Draft & Target model inference
