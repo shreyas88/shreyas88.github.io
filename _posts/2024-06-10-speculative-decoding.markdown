@@ -100,7 +100,7 @@ Pytorch implementation(adapted and simplified from [vllm repo](https://github.co
 
 4. From the rejected token, we append back the tokens upto the rejected token to the input prefix tokens for next iteration of speculative decoding. 
 
-5. Additionally, in order to ensure forward progress for each epoch(in case we fail to get any token accepted) we generate one additional sample from the adjusted probability distribution  **p'(x) = \text{norm}(\max(0, p_{n+1}(x) - q_{n+1}(x)))**
+5. Additionally, in order to ensure forward progress for each iteration(in case we fail to get any token accepted) we generate one additional sample from the adjusted probability distribution  **p'(x) = \text{norm}(\max(0, p_{n+1}(x) - q_{n+1}(x)))**
 
 ```python
  # generate recovered tokens for case where samples get rejected
