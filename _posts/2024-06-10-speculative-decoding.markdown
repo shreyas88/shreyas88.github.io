@@ -22,7 +22,7 @@ Additional reading for more context, please refer to these public blogs:
 
 
 ### Not all tokens are created equal
-Some tokens are easier to predict for the LLM than other tokens. Eg for code generation maybe curly braces after if statement, generation of stop words, conjunctions and other easier to predict words. In theory, it should be possible for a smaller model to predict those easier tokens and offload some computation from a larger model.
+Some tokens are easier to predict for the LLM than other tokens. Eg for code generation maybe curly braces after if statement, generation of stop words, conjunctions and other easier to predict words. For instance if you feed a output schema into LLM input query you know the fields of the output and corresponding tokens. In theory, it should be possible for a smaller model to predict those easier tokens and offload some computation from a larger model.
 
 ### Speculative decoding
 Speculative decoding technique exploits the above observations to speedup inference. We use a faster, smaller approximate model **`M_q`** to predict K lookahead tokens in parallel to the main larger, slower target model **`M_p`**.
