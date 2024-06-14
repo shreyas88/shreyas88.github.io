@@ -1,5 +1,5 @@
 ---
-title: Comparing paradigms in LLM application development
+title: Comparing techniques in LLM application development
 date: 2024-06-13 23:07:00 Z
 ---
 
