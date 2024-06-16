@@ -3,7 +3,9 @@ title: Comparing techniques in LLM application development
 date: 2024-06-13 23:07:00 Z
 ---
 
-When it comes to LLM application development techniques, how do you evaluate various strategies and come up with the best approach for your problem.  Note that some of these techniques are not exclusive and can be used in combination with each other. 
+When it comes to LLM application development techniques, how do you evaluate various strategies and come up with the best approach for your problem. In the following table we examine the pros/cons associated with each approach.
+
+Note that these techniques are not mutually exclusive and can be used in combination with each other. 
 
 
 | Technique/Paradigm                       | Advantages                                                                                                                                                                                                                                                                                                      | Disadvantages                                                                                 |
