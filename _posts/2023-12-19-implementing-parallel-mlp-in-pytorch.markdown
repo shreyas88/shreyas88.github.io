@@ -1,5 +1,5 @@
 ---
-title: Implementing distributed MLP layer in pytorch
+title: Implementing distributed transformer MLP layer in pytorch
 date: 2023-12-19 02:54:00 Z
 ---
 
